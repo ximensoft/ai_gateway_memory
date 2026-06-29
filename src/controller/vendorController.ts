@@ -246,6 +246,19 @@ async function testVendor(c: Context) {
             responseData = responseText;
         }
 
+        const headerEntries = Array.from(headers.entries()).map(([key, value]) => {
+            if (key.toLowerCase() === 'authorization' || key.toLowerCase() === 'x-api-key') {
+                const visible = value.length > 12 ? value.slice(0, 8) + '****' + value.slice(-4) : '****';
+                return [key, visible];
+            }
+            return [key, value];
+        });
+
+        let requestBodyDisplay: unknown = upstreamBody;
+        try {
+            requestBodyDisplay = JSON.parse(upstreamBody);
+        } catch {}
+
         return c.json({
             success: response.ok,
             status: response.status,
@@ -253,12 +266,32 @@ async function testVendor(c: Context) {
             url,
             converted_from: convertedFrom,
             converted_to: convertedTo,
+            request_method: "POST",
+            request_headers: Object.fromEntries(headerEntries),
+            request_body: requestBodyDisplay,
             response: responseData,
         });
     } catch (error: any) {
+        let requestBodyDisplay: unknown = upstreamBody;
+        try {
+            requestBodyDisplay = JSON.parse(upstreamBody);
+        } catch {}
+
+        const headerEntries = Array.from(headers.entries()).map(([key, value]) => {
+            if (key.toLowerCase() === 'authorization' || key.toLowerCase() === 'x-api-key') {
+                const visible = value.length > 12 ? value.slice(0, 8) + '****' + value.slice(-4) : '****';
+                return [key, visible];
+            }
+            return [key, value];
+        });
+
         return c.json({
             success: false,
             error: error.message || String(error),
+            url,
+            request_method: "POST",
+            request_headers: Object.fromEntries(headerEntries),
+            request_body: requestBodyDisplay,
         }, 500);
     }
 }

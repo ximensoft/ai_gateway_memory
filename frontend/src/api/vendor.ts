@@ -10,6 +10,9 @@ export interface VendorTestResponse {
     url?: string;
     converted_from?: string;
     converted_to?: string;
+    request_method?: string;
+    request_headers?: Record<string, string>;
+    request_body?: unknown;
     response?: unknown;
     error?: unknown;
 }
