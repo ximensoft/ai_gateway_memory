@@ -22,6 +22,12 @@ export enum VendorType {
     OTHER = "other",
 }
 
+
+export enum VendorAuthMode {
+    API_KEY = "api_key",
+    BEARER_TOKEN = "bearer_token",
+}
+
 export enum ApiFormat {
     OPENAI = "openai",
     ANTHROPIC = "anthropic",
