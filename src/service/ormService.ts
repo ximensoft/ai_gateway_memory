@@ -166,6 +166,38 @@ class ORMService {
         const queryBuilder = (sutando as any).connection();
         return (queryBuilder as any).connector;
     }
+
+    private static readonly EXPECTED_TABLES = [
+        "client_config",
+        "config",
+        "model",
+        "recharge_records",
+        "record",
+        "user",
+        "vendor",
+        "vendor_model"
+    ];
+
+    async verifySchema(): Promise<void> {
+        try {
+            const knex = this.getKnex();
+            if (!knex) return;
+
+            const result = await knex.raw("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+            
+            // Handle different driver return formats (better-sqlite3 returns array directly, D1 returns { results: array })
+            const rows = result.results || result;
+            const actualTables = new Set(rows.map((row: any) => row.name));
+
+            const missingTables = ORMService.EXPECTED_TABLES.filter(table => !actualTables.has(table));
+
+            if (missingTables.length > 0) {
+                console.error(`\x1b[31m[CRITICAL WARNING] Database schema verification failed! Missing expected tables: ${missingTables.join(", ")}\x1b[0m`);
+            }
+        } catch (e) {
+            console.error("\x1b[31m[CRITICAL WARNING] Failed to verify database schema:\x1b[0m", e);
+        }
+    }
 }
 
 const ormService = new ORMService();

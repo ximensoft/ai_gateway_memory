@@ -12,7 +12,7 @@ let INSTANCE_START_TIME: Date | null = null;
 
 function getEnvironmentName(): string {
     if (ormService.mode === "worker") return "Cloudflare Workers";
-    if (process.env.DESKTOP_MODE) return "Desktop App";
+    if (globalThis.process?.argv?.includes("--desktop-mode")) return "Desktop App";
     return "Node";
 }
 

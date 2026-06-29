@@ -29,7 +29,9 @@ pub fn get_command(exe_dir: &Path) -> (Command, String) {
     {
         let sidecar_path = exe_dir.join("ai-gateway-backend");
         let resource_dir = exe_dir.join("../Resources/resource");
-        let c = Command::new(&sidecar_path);
+        let mut c = Command::new(&sidecar_path);
+        c.arg("--api-only");
+        c.arg("--desktop-mode");
         (c, resource_dir.join("migrate").to_string_lossy().into_owned())
     }
 }

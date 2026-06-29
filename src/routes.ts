@@ -1,7 +1,6 @@
 import { Hono, MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { join } from "path";
-import { readFileSync } from "fs";
+
 import gatewayController from "./controller/gatewayController";
 import modelController from "./controller/modelController";
 import userController from "./controller/userController";
@@ -158,52 +157,6 @@ app.delete("/test/cache/clear", async (c) => {
     return c.json({ success: true });
 });
 
-// SPA fallback - serve index.html for all non-API routes
-// This handles frontend routes like /dashboard, /vendor, etc.
-app.get("*", async (c, next) => {
-    const url = new URL(c.req.url);
-    const pathname = url.pathname;
-
-    // Let static assets pass through to static file middleware (node mode)
-    if (pathname.startsWith("/assets/") ||
-        pathname.startsWith("/data_viewer/") ||
-        pathname.endsWith(".svg") ||
-        pathname.endsWith(".png") ||
-        pathname.endsWith(".jpg") ||
-        pathname.endsWith(".ico") ||
-        pathname.endsWith(".woff") ||
-        pathname.endsWith(".woff2") ||
-        pathname.endsWith(".ttf")) {
-        return next();
-    }
-
-    // API routes should return 404
-    if (pathname.startsWith("/v1/") || pathname.startsWith("/llm/") || pathname.includes(".json")) {
-        return c.notFound();
-    }
-
-    // Try to serve from Assets binding first (worker mode)
-    if (c.env.ASSETS) {
-        try {
-            const response = await c.env.ASSETS.fetch(new Request("https://example.com/index.html"));
-            if (response.ok) {
-                const html = await response.text();
-                return c.html(html, 200);
-            }
-        } catch (e) {
-            // Fall through to serve index.html directly
-        }
-    }
-
-    // Serve index.html directly (node mode or fallback)
-    try {
-        const distPath = join(process.cwd(), "frontend", "dist");
-        const indexHtml = readFileSync(join(distPath, "index.html"), "utf-8");
-        return c.html(indexHtml, 200);
-    } catch (e) {
-        return c.notFound();
-    }
-});
 
 // Custom 404 handler for API routes
 app.notFound((c) => {

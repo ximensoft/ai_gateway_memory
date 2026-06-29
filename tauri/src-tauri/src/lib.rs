@@ -219,7 +219,7 @@ pub fn run() {
                .env("HOST", &config.host)
                .env("LOG_DIR", log_dir.to_str().unwrap())
                .env("ROOT_TOKEN", &config.root_token)
-               .env("DESKTOP_MODE", "1")
+               .arg("--desktop-mode")
                .env("MIGRATION_DIR", migration_dir);
 
             let mut state = sys::platform::setup_command(&mut cmd);
