@@ -116,6 +116,21 @@
                     </a-space>
                 </div>
 
+                <div v-if="result.request_headers || result.request_body" class="result-detail">
+                    <div class="detail-label">
+                        请求原文:
+                        <a-button
+                            type="link"
+                            size="small"
+                            class="copy-btn"
+                            @click="copyRequestText"
+                        >
+                            <CopyOutlined /> 复制
+                        </a-button>
+                    </div>
+                    <pre class="request-body">{{ formattedRequest }}</pre>
+                </div>
+
                 <div class="result-detail">
                     <div class="detail-label">响应详情:</div>
                     <pre class="response-body">{{ formattedResponse }}</pre>
@@ -131,6 +146,8 @@ import { testVendor, listVendorModels } from '@/api/vendor';
 import type { VendorTestResponse } from '@/api/vendor';
 import type { Vendor, VendorModel } from '@/types/vendor';
 import { notifyRequestError, notifySuccess, notifyWarning } from '@/utils/requestFeedback';
+import { message as antMessage } from 'ant-design-vue';
+import { CopyOutlined } from '@ant-design/icons-vue';
 import { useVendorPresets } from '@/composables/useVendorPresets';
 
 interface ModelInfo {
@@ -247,6 +264,46 @@ const formattedResponse = computed(() => {
         return String(data);
     }
 });
+
+
+const formattedRequest = computed(() => {
+    const r = result.value;
+    if (!r) return '';
+    const method = r.request_method || 'POST';
+    const url = r.url || '';
+    const headers = r.request_headers || {};
+    const body = r.request_body;
+
+    const lines: string[] = [];
+    lines.push(`${method} ${url}`);
+    for (const [key, value] of Object.entries(headers)) {
+        lines.push(`${key}: ${value}`);
+    }
+    if (body !== undefined && body !== null) {
+        lines.push('');
+        try {
+            if (typeof body === 'object') {
+                lines.push(JSON.stringify(body, null, 2));
+            } else {
+                lines.push(String(body));
+            }
+        } catch {
+            lines.push(String(body));
+        }
+    }
+    return lines.join('\n');
+});
+
+
+function copyRequestText() {
+    const text = formattedRequest.value;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+        antMessage.success('已复制请求原文');
+    }).catch(() => {
+        antMessage.error('复制失败');
+    });
+}
 
 function open(vendor: Vendor, defaultModel?: string, info?: ModelInfo) {
     currentVendor.value = vendor;
@@ -489,5 +546,24 @@ defineExpose({ open });
     overflow: auto;
     white-space: pre-wrap;
     word-break: break-all;
+}
+
+.request-body {
+    background: #1e222a;
+    color: #abb2bf;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    max-height: 300px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.copy-btn {
+    float: right;
+    padding: 0;
+    height: auto;
+    font-size: 12px;
 }
 </style>
